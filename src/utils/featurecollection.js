@@ -22,6 +22,26 @@ export function featurecollection(x) {
         geometry: d,
       })),
     };
+  } else if (
+    typeof x == "object" &&
+    [
+      "Point",
+      "LineString",
+      "Polygon",
+      "MultiPoint",
+      "MultiLineString",
+      "MultiPolygon",
+    ].includes(x.type)
+  ) {
+    return {
+      type: "FeatureCollection",
+      features: [{ type: "Feature", properties: {}, geometry: x }],
+    };
+  } else if (typeof x == "object" && x.type == "Feature") {
+    return {
+      type: "FeatureCollection",
+      features: [x],
+    };
   } else {
     return x;
   }

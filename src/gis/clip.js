@@ -1,21 +1,30 @@
 import { union } from "./union.js";
-import { km2deg } from "../helpers/km2deg.js";
-import * as jsts from "jsts/dist/jsts";
-import { featurecollection } from "../helpers/featurecollection.js";
+import { buffer } from "./buffer.js";
+import GeoJSONReader from "jsts/org/locationtech/jts/io/GeoJSONReader";
+import GeoJSONWriter from "jsts/org/locationtech/jts/io/GeoJSONWriter";
+import OverlayOp from "jsts/org/locationtech/jts/operation/overlay/OverlayOp";
+
+const jsts = {
+  OverlayOp,
+  GeoJSONReader,
+  GeoJSONWriter,
+};
+
+import { featurecollection } from "../utils/featurecollection.js";
 
 export function clip(x, options = {}) {
-  let reader = new jsts.io.GeoJSONReader();
+  let reader = new jsts.GeoJSONReader();
+  let writer = new jsts.GeoJSONWriter();
+
   let data = reader.read(featurecollection(x));
-
-  let buffer = options.buffer ? km2deg(options.buffer) : 0.0000001;
+  let bufferdist = options.buffer ? options.buffer : 0.1;
   let reverse = options.reverse ? true : false;
-
-  let clip = null;
+  let myclip = null;
   if (options.clip != null && options.clip != undefined) {
-    clip = reader.read(options.clip);
+    myclip = featurecollection(options.clip);
   } else {
     let delta = 0.00001;
-    clip = reader.read({
+    myclip = {
       type: "FeatureCollection",
       features: [
         {
@@ -35,27 +44,40 @@ export function clip(x, options = {}) {
           },
         },
       ],
-    });
+    };
   }
-
   // clip union
-  let geomclip = clip.features[0].geometry;
-  for (let i = 1; i < clip.features.length; i++) {
-    geomclip = geomclip.union(clip.features[i].geometry);
-  }
-  geomclip = geomclip.buffer(reverse ? -buffer : buffer);
+
+  let geomclip = buffer(union(myclip), {
+    dist: reverse ? -bufferdist : bufferdist,
+  });
+
+  // return geomclip;
+  geomclip = reader.read(geomclip).features[0].geometry;
 
   // Intersection / difference
   let result = [];
 
   data.features.forEach((d) => {
-    let geom = new jsts.io.GeoJSONWriter().write(
-      reverse
-        ? d.geometry.difference(geomclip)
-        : d.geometry.intersection(geomclip)
-    );
+    // let geom = d.geometry;
 
-    if (geom.coordinates[0].length !== 0) {
+    let geom = reverse
+      ? jsts.OverlayOp.difference(d.geometry, geomclip)
+      : jsts.OverlayOp.intersection(d.geometry, geomclip);
+
+    // fix point intersection
+    if (geom.hasOwnProperty("_coordinates")) {
+      if (geom._coordinates._coordinates.length == 0) {
+        geom = { type: "Point", coordinates: [] };
+      } else {
+        geom = writer.write(geom);
+      }
+    } else {
+      geom = writer.write(geom);
+    }
+
+    // build features
+    if (geom.coordinates.flat().length !== 0) {
       result.push({
         type: "Feature",
         properties: d.properties,

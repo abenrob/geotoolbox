@@ -21,7 +21,7 @@ Pinned version
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/npm/geotoolbox@1.9"
+  src="https://cdn.jsdelivr.net/npm/geotoolbox@1.9.1"
   charset="utf-8"
 ></script>
 ```
@@ -37,7 +37,7 @@ geo = require("geotoolbox");
 Pinned version
 
 ```js
-geo = require("geotoolbox@1.9");
+geo = require("geotoolbox@1.9.1");
 ```
 
 ### 2. <ins>Demo</ins>
@@ -358,7 +358,7 @@ geo.tissot(20) // step (default; 10)
 geo.geolines() 
 ```
 
-#### 3.3 Helpers
+#### 3.3 Utils
 
 **featurecollection** allows converting an array of features or an array of geometries to a well formated geosjon. [Example](https://observablehq.com/@neocartocnrs/featurecollection?collection=@neocartocnrs/geotoolbox)
 
@@ -366,4 +366,10 @@ geo.geolines()
 
 ```js
 geo.featurecollection(features) 
+```
+
+**type** allows get the geometry type of a geojson ("point", "line", "polygon")
+
+```js
+geo.type(geojson) 
 ```
