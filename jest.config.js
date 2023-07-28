@@ -1,6 +1,8 @@
 module.exports = {
+    // preset: "rollup-jest",
     transform: {
-      "^.+\\.(js|jsx)$": "babel-jest",
+      // "^.+\\.(js|jsx)$": "rollup-jest",
+      "\\.m?js$": ["rollup-jest", {"output": {"sourcemap": true}}]
     },
     setupFilesAfterEnv: ["./testing/setup.js"],
     transformIgnorePatterns: [                                                                            
